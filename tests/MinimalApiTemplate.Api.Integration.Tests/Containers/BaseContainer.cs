@@ -5,15 +5,18 @@ namespace MinimalApiTemplate.Api.Integration.Tests.Containers;
 internal abstract class BaseContainer<TContainer>
     where TContainer : class, new()
 {
-    private static readonly Lazy<TContainer> SingleLazyInstance = new(() => new TContainer());
+    private static readonly Lazy<TContainer> SingleLazyInstance = 
+        new(() => new TContainer());
 
     public static TContainer Instance => SingleLazyInstance.Value;
 
-    protected readonly IContainer _container;
+    private readonly Lazy<IContainer> _lazyContainer;
+
+    protected IContainer Container => _lazyContainer.Value;
 
     protected BaseContainer()
     {
-        _container = BuildContainer();
+        _lazyContainer = new Lazy<IContainer>(BuildContainer);
     }
 
     protected abstract IContainer BuildContainer();
@@ -22,7 +25,7 @@ internal abstract class BaseContainer<TContainer>
 
     public async virtual Task StartContainerAsync(CancellationToken cancellationToken)
     {
-        await _container.StartAsync(cancellationToken);
+        await Container.StartAsync(cancellationToken);
 
         var containerRunning = IsContainerRunning(cancellationToken);
 
@@ -35,11 +38,11 @@ internal abstract class BaseContainer<TContainer>
     private bool IsContainerRunning(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested 
-            && _container.State != TestcontainersStates.Running)
+            && Container.State != TestcontainersStates.Running)
         {
             Thread.Sleep(250);
         }
 
-        return _container.State == TestcontainersStates.Running;
+        return Container.State == TestcontainersStates.Running;
     }
 }

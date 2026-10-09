@@ -16,5 +16,5 @@ internal sealed class CacheContainer : BaseContainer<CacheContainer>
     }
 
     public override string GetConnectionString() =>
-        $"{_container.Hostname}:{_container.GetMappedPublicPort(CacheDefaultPort)}";
+        $"{Container.Hostname}:{Container.GetMappedPublicPort(CacheDefaultPort)}";
 }
